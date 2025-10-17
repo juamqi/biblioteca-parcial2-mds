@@ -1,0 +1,59 @@
+import { db } from "../config/db.js";
+
+export const getLibros = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT l.ISBN, l.titulo, l.autor, e.nombre AS estado
+      FROM libro l
+      JOIN estadolibro e ON l.estadolibro = e.idEstadoLibro
+    `);
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const addLibro = async (req, res) => {
+  try {
+    const { ISBN, titulo, autor } = req.body;
+    if (!ISBN || !titulo || !autor)
+      return res.status(400).json({ mensaje: "Faltan datos del libro" });
+
+    const [estado] = await db.query(
+      "SELECT idEstadoLibro FROM estadolibro WHERE nombre = 'DISPONIBLE' LIMIT 1"
+    );
+    const idEstado = estado[0].idEstadoLibro;
+
+    await db.query(
+      "INSERT INTO libro (ISBN, titulo, autor, estadolibro) VALUES (?, ?, ?, ?)",
+      [ISBN, titulo, autor, idEstado]
+    );
+
+    res.json({ mensaje: "Libro agregado correctamente" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateEstadoLibro = async (req, res) => {
+  try {
+    const { ISBN } = req.params;
+    const { nuevoEstado } = req.body;
+
+    const [estado] = await db.query(
+      "SELECT idEstadoLibro FROM estadolibro WHERE nombre = ? LIMIT 1",
+      [nuevoEstado]
+    );
+    if (estado.length === 0)
+      return res.status(400).json({ mensaje: "Estado inválido" });
+
+    await db.query("UPDATE libro SET estadolibro = ? WHERE ISBN = ?", [
+      estado[0].idEstadoLibro,
+      ISBN,
+    ]);
+
+    res.json({ mensaje: `Estado del libro actualizado a ${nuevoEstado}` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
