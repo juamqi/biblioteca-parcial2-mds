@@ -4,7 +4,9 @@ import {
   addPrestamo,
   devolverLibro,
   getPrestamosPorSocio,
-  getPrestamosActivos
+  getPrestamosActivos,
+  updatePrestamo,
+  deletePrestamo
 } from "../controllers/prestamoController.js";
 
 export const router = express.Router();
@@ -14,3 +16,5 @@ router.get("/activos", getPrestamosActivos);
 router.get("/socio/:nroSocio", getPrestamosPorSocio);
 router.post("/", addPrestamo);
 router.put("/:idPrestamo/devolver", devolverLibro);
+router.put("/:idPrestamo", updatePrestamo);
+router.delete("/:idPrestamo", deletePrestamo);
